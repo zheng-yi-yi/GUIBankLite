@@ -2,11 +2,11 @@
 
 ## 介绍
 
-GUIBankLite（银行卡管理系统）是一个基于Java语言开发的简易银行卡管理系统。它包括数据库配置、工具类、实体类、DAO层、服务层以及视图层的实现，提供了银行卡的创建、存款、取款、密码修改、转账等功能，适合`Java`初学者。
+GUIBankLite（银行卡管理系统）是一个基于Java语言开发的简易银行卡管理系统。它包括数据库配置、工具类、实体类、DAO层、服务层以及视图层的实现，提供了银行卡的创建、存款、取款、密码修改、转账以及绑定亲属卡等功能，适合`Java`初学者练习。
 
 ## 如何使用？
 
-首先，将项目导入到IDE（如IntelliJ IDEA或Eclipse）中。
+首先，将项目导入到IDE（如IntelliJ IDEA）中。
 
 **数据库脚本**：
 
@@ -31,36 +31,38 @@ GUIBankLite（银行卡管理系统）是一个基于Java语言开发的简易�
 
 **数据库连接**：
 
-通过`DBConfig`类配置数据库连接信息，你需要根据需要修改自己的信息修改`DBConfig`中的数据库用户名以及密码：
+通过`DatabaseConfig`类配置数据库连接信息，你需要根据需要修改自己的信息修改`DatabaseConfig`中的数据库用户名以及密码：
 
 ```java
-package cn.zhengyiyi.common.config;
-
-public class DBConfig {
-    public static final String URL = "jdbc:mysql://localhost:3306/bank_lite_db?serverTimezone=UTC";
-    public static final String USER = "root";
-    public static final String PASSWORD = "123456";
+public class DatabaseConfig {
+    public static final String URL = "jdbc:mysql://localhost:3306/bank_lite_db?serverTimezone=UTC"; // 数据库URL
+    public static final String USER = "root"; // 数据库用户名
+    public static final String PASSWORD = "123456"; // 数据库密码
 }
 ```
 
 `DatabaseTool`类用于获取数据库连接：
 
 ```java
-public class DatabaseTool {
+public class DatabaseUtil {
+    // 获取数据库连接
     public Connection getConnection() throws SQLException {
         try {
-            // 如果你使用的是 MySQL 5.x 版本，请使用 com.mysql.jdbc.Driver
-            Class.forName("com.mysql.cj.jdbc.Driver"); // 加载数据库驱动（也可以不写）
+            // 加载数据库驱动
+            // 如果你使用的是 MySQL 8.0 以下版本，请使用 com.mysql.jdbc.Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
         // 获取数据库连接
-        return DriverManager.getConnection(DBConfig.URL, DBConfig.USER, DBConfig.PASSWORD);
+        return DriverManager.getConnection(DatabaseConfig.URL, DatabaseConfig.USER, DatabaseConfig.PASSWORD);
     }
 }
 ```
 
-> 备注：JDBC 4.0 引入了一种服务提供者机制（SPI），允许`DriverManager`自动检测可用的驱动，只要驱动的`jar`文件在类路径（`classpath`）上。因此，对于**MySQL 8及更高版本的驱动**（`com.mysql.cj.jdbc.Driver`），不需要在代码中显式加载驱动。只需确保驱动的JAR文件在应用的类路径上即可。
+> 备注：
+>
+> JDBC 4.0 引入了一种服务提供者机制（SPI），允许`DriverManager`自动检测可用的驱动，只要驱动的`jar`文件在类路径（`classpath`）上。因此，对于**MySQL 8及更高版本的驱动**（`com.mysql.cj.jdbc.Driver`），**不需要在代码中显式加载驱动**。只需确保驱动的JAR文件在应用的类路径上即可。
 
 最后，找到项目中的主类（`Main`），运行该类以启动图形用户界面。
 
