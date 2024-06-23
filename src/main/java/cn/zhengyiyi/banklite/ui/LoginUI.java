@@ -1,7 +1,7 @@
-package cn.zhengyiyi.view;
+package cn.zhengyiyi.banklite.ui;
 
-import cn.zhengyiyi.dao.entity.BankCard;
-import cn.zhengyiyi.service.BankService;
+import cn.zhengyiyi.banklite.entity.BankCard;
+import cn.zhengyiyi.banklite.service.IBankService;
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -9,12 +9,12 @@ import java.awt.*;
 import java.util.Enumeration;
 
 public class LoginUI {
-    private final BankService bankService;
+    private final IBankService bankServiceImpl;
     private final JFrame frame;
     private static final String[] BANKS = {"中国工商银行", "中国建设银行", "中国农业银行"};
 
-    public LoginUI(BankService bankService) {
-        this.bankService = bankService;
+    public LoginUI(IBankService bankServiceImpl) {
+        this.bankServiceImpl = bankServiceImpl;
         this.frame = new JFrame("基于图形界面的银行卡管理系统 - 登录界面");
         setGlobalFontSize();
     }
@@ -101,9 +101,9 @@ public class LoginUI {
                 JOptionPane.showMessageDialog(null, "密码不能为空！");
                 return;
             }
-            if (bankService.verifyLogin(selectedBank, cardNumber, password)) {
+            if (bankServiceImpl.verifyLogin(selectedBank, cardNumber, password)) {
                 frame.dispose();
-                new BankUI(bankService, selectedBank, cardNumber).start();
+                new BankUI(bankServiceImpl, selectedBank, cardNumber).start();
             } else {
                 JOptionPane.showMessageDialog(null, "卡号或密码错误！");
             }
@@ -119,10 +119,10 @@ public class LoginUI {
             String password = getPasswordInput();
             if (password == null) return;
 
-            BankCard newCard = bankService.createCard(bankName, username, password);
+            BankCard newCard = bankServiceImpl.createCard(bankName, username, password);
             JOptionPane.showMessageDialog(null, "尊敬的" + newCard.getUserName() + "用户，您的银行卡已创建成功！卡号为：" + newCard.getCardNumber());
             frame.dispose();
-            new BankUI(bankService, bankName, newCard.getCardNumber()).start();
+            new BankUI(bankServiceImpl, bankName, newCard.getCardNumber()).start();
         });
     }
 

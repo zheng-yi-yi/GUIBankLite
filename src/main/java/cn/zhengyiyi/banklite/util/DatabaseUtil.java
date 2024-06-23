@@ -1,12 +1,22 @@
-package cn.zhengyiyi.common.tool;
+package cn.zhengyiyi.banklite.util;
 
-import cn.zhengyiyi.common.config.DBConfig;
+import cn.zhengyiyi.banklite.config.DatabaseConfig;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class DatabaseTool {
+/**
+ * 数据库工具类。
+ * 用于管理数据库连接。
+ */
+public class DatabaseUtil {
+    /**
+     * 获取数据库连接。
+     *
+     * @return 数据库连接对象
+     * @throws SQLException 如果连接数据库时发生错误
+     */
     public Connection getConnection() throws SQLException {
         try {
             // 加载数据库驱动
@@ -16,6 +26,6 @@ public class DatabaseTool {
             e.printStackTrace();
         }
         // 获取数据库连接
-        return DriverManager.getConnection(DBConfig.URL, DBConfig.USER, DBConfig.PASSWORD);
+        return DriverManager.getConnection(DatabaseConfig.URL, DatabaseConfig.USER, DatabaseConfig.PASSWORD);
     }
 }

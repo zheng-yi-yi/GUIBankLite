@@ -1,10 +1,10 @@
-package cn.zhengyiyi.view;
+package cn.zhengyiyi.banklite.ui;
 
-import cn.zhengyiyi.common.tool.EncryptionTool;
-import cn.zhengyiyi.common.tool.TimeTool;
-import cn.zhengyiyi.common.tool.UITool;
-import cn.zhengyiyi.dao.entity.BankCard;
-import cn.zhengyiyi.service.BankService;
+import cn.zhengyiyi.banklite.service.IBankService;
+import cn.zhengyiyi.banklite.util.EncryptionUtil;
+import cn.zhengyiyi.banklite.util.TimeUtil;
+import cn.zhengyiyi.banklite.util.UIUtil;
+import cn.zhengyiyi.banklite.entity.BankCard;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,20 +16,20 @@ import java.util.function.Consumer;
 
 public class BankUI {
     private JLabel balanceLabel;
-    private final BankService bankService;
+    private final IBankService bankServiceImpl;
     private final String bankName;
     private final String cardNumber;
     private JTextArea operationTextArea;
 
-    public BankUI(BankService bankService, String bankName, String cardNumber) {
-        this.bankService = bankService;
+    public BankUI(IBankService bankServiceImpl, String bankName, String cardNumber) {
+        this.bankServiceImpl = bankServiceImpl;
         this.bankName = bankName;
         this.cardNumber = cardNumber;
     }
 
     public void start() {
-        UITool.setFontSize();
-        BankCard card = bankService.getCard(cardNumber);
+        UIUtil.setFontSize();
+        BankCard card = bankServiceImpl.getCard(cardNumber);
         JFrame frame = new JFrame("基于图形界面的银行卡管理系统 - " + bankName);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1200, 700);
@@ -83,7 +83,7 @@ public class BankUI {
 
         operationTextArea.append("当前记录：\n");
 
-        List<String> operations = bankService.getOperations(cardNumber);
+        List<String> operations = bankServiceImpl.getOperations(cardNumber);
         for (String operation : operations) {
             operationTextArea.append(operation + "\n");
         }
@@ -111,17 +111,17 @@ public class BankUI {
 
         double finalAmount = amount;
         handleBankOperation(cardNumber, card -> {
-            bankService.deposit(card, finalAmount);
+            bankServiceImpl.deposit(card, finalAmount);
             JOptionPane.showMessageDialog(null, "尊敬的" + card.getUserName() + "用户，您已存款成功，当前余额为：" + card.getBalance() + "元。");
         });
 
         updateBalanceLabel();
-        String transactionTime = TimeTool.getCurrentTime();
-        appendOperationText("[" + transactionTime + "] -> [" + bankService.getCard(cardNumber).getUserName() + "]用户往 [" + cardNumber + "] 银行卡中存款 " + amount + " 元。");
+        String transactionTime = TimeUtil.getCurrentTime();
+        appendOperationText("[" + transactionTime + "] -> [" + bankServiceImpl.getCard(cardNumber).getUserName() + "]用户往 [" + cardNumber + "] 银行卡中存款 " + amount + " 元。");
     }
 
     private void withdraw() {
-        double curBankCardBalance = bankService.getCard(cardNumber).getBalance();
+        double curBankCardBalance = bankServiceImpl.getCard(cardNumber).getBalance();
         double amount;
         while (true) {
             String amountStr = JOptionPane.showInputDialog("请输入取款金额：");
@@ -143,31 +143,31 @@ public class BankUI {
 
         double finalAmount = amount;
         handleBankOperation(cardNumber, card -> {
-            bankService.withdraw(card, finalAmount);
+            bankServiceImpl.withdraw(card, finalAmount);
             JOptionPane.showMessageDialog(null, "尊敬的" + card.getUserName() + "用户，您已取款成功，当前余额为：" + card.getBalance() + "元。");
         });
 
         updateBalanceLabel();
-        String transactionTime = TimeTool.getCurrentTime();
-        appendOperationText("[" + transactionTime + "] -> [" + bankService.getCard(cardNumber).getUserName() + "]用户从 [" + cardNumber + "] 银行卡中取款 " + amount + " 元。");
+        String transactionTime = TimeUtil.getCurrentTime();
+        appendOperationText("[" + transactionTime + "] -> [" + bankServiceImpl.getCard(cardNumber).getUserName() + "]用户从 [" + cardNumber + "] 银行卡中取款 " + amount + " 元。");
     }
 
     private void changePassword() {
-        String password = bankService.getCard(cardNumber).getPassword();
+        String password = bankServiceImpl.getCard(cardNumber).getPassword();
         if (!verifyPassword()) return;
 
         String newPassword = getPasswordInput(password);
         if (newPassword == null) return;
 
         handleBankOperation(cardNumber, card -> {
-            bankService.changePassword(card, password, newPassword);
+            bankServiceImpl.changePassword(card, password, newPassword);
             JOptionPane.showMessageDialog(null, "密码更改成功！");
         });
     }
 
     private void logout(JFrame frame) {
         frame.dispose();
-        new LoginUI(bankService).start();
+        new LoginUI(bankServiceImpl).start();
     }
 
     private void deleteAccount(JFrame frame) {
@@ -176,16 +176,16 @@ public class BankUI {
             if (!verifyPassword()) return;
 
             handleBankOperation(cardNumber, card -> {
-                bankService.deleteCard(card);
+                bankServiceImpl.deleteCard(card);
                 JOptionPane.showMessageDialog(null, "账户已注销！");
             });
             frame.dispose();
-            new LoginUI(bankService).start();
+            new LoginUI(bankServiceImpl).start();
         }
     }
 
     private void bindRelativeCard() {
-        List<BankCard> relativeCards = bankService.getRelativeCardNumbers(cardNumber);
+        List<BankCard> relativeCards = bankServiceImpl.getRelativeCardNumbers(cardNumber);
 
         String relativeCardNumber;
         while(true) {
@@ -211,7 +211,7 @@ public class BankUI {
                 return;
             } else if(targetCardUserName.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "目标卡持有人的名字不能为空！");
-            } else if(!bankService.getCard(relativeCardNumber).getUserName().equals(targetCardUserName)) {
+            } else if(!bankServiceImpl.getCard(relativeCardNumber).getUserName().equals(targetCardUserName)) {
                 JOptionPane.showMessageDialog(null, "名字有误！请重新输入。");
             } else {
                 break;
@@ -220,13 +220,13 @@ public class BankUI {
 
         String finalRelativeCardNumber = relativeCardNumber;
         handleBankOperation(cardNumber, card -> {
-            bankService.bindRelativeCard(card, finalRelativeCardNumber);
+            bankServiceImpl.bindRelativeCard(card, finalRelativeCardNumber);
             JOptionPane.showMessageDialog(null, "亲属卡绑定成功！");
         });
     }
 
     private void transfer() {
-        List<BankCard> relativeCards = bankService.getRelativeCards(cardNumber);
+        List<BankCard> relativeCards = bankServiceImpl.getRelativeCards(cardNumber);
         String[] options = new String[relativeCards.size() + 1];
         options[0] = "手动输入目标卡号";
         for (int i = 0; i < relativeCards.size(); i++) {
@@ -255,9 +255,9 @@ public class BankUI {
                 if (targetCardUserName.isEmpty()) {
                     JOptionPane.showMessageDialog(null, "目标卡持有人的名字不能为空！");
                     return;
-                } else if(bankService.getCard(targetCardNumber) == null) {
+                } else if(bankServiceImpl.getCard(targetCardNumber) == null) {
                     JOptionPane.showMessageDialog(null, "目标卡不存在！请重新输入。");
-                } else if(!bankService.getCard(targetCardNumber).getUserName().equals(targetCardUserName)) {
+                } else if(!bankServiceImpl.getCard(targetCardNumber).getUserName().equals(targetCardUserName)) {
                     JOptionPane.showMessageDialog(null, "名字有误！请重新输入。");
                 } else {
                     break;
@@ -265,7 +265,7 @@ public class BankUI {
             }
         }
 
-        double curBankCardBalance = bankService.getCard(cardNumber).getBalance();
+        double curBankCardBalance = bankServiceImpl.getCard(cardNumber).getBalance();
         double amount;
         while (true) {
             String amountStr = JOptionPane.showInputDialog("请输入转账金额：");
@@ -289,7 +289,7 @@ public class BankUI {
         double finalAmount = amount;
         handleBankOperation(cardNumber, card -> {
             try {
-                bankService.transfer(card, finalTargetCardNumber, finalAmount);
+                bankServiceImpl.transfer(card, finalTargetCardNumber, finalAmount);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -297,8 +297,8 @@ public class BankUI {
         });
 
         updateBalanceLabel();
-        String transactionTime = TimeTool.getCurrentTime();
-        appendOperationText("[" + transactionTime + "] -> [" + bankService.getCard(cardNumber).getUserName() + "]用户转账 " + amount + " 元到 [" + targetCardNumber + "] 卡中。");
+        String transactionTime = TimeUtil.getCurrentTime();
+        appendOperationText("[" + transactionTime + "] -> [" + bankServiceImpl.getCard(cardNumber).getUserName() + "]用户转账 " + amount + " 元到 [" + targetCardNumber + "] 卡中。");
     }
 
     private String getPasswordInput(String oldPassword) {
@@ -332,8 +332,8 @@ public class BankUI {
                 JOptionPane.showMessageDialog(null, "密码无效。请确保密码是6位数字。");
                 continue;
             }
-            BankCard card = bankService.getCard(cardNumber);
-            String encryptedPassword = EncryptionTool.md5WithSalt(inputPassword, card.getSalt());
+            BankCard card = bankServiceImpl.getCard(cardNumber);
+            String encryptedPassword = EncryptionUtil.md5WithSalt(inputPassword, card.getSalt());
             if (!encryptedPassword.equals(card.getPassword())) {
                 JOptionPane.showMessageDialog(null, "您的密码错误！请重新输入密码。");
                 continue;
@@ -344,7 +344,7 @@ public class BankUI {
     }
 
     private void handleBankOperation(String cardNumber, Consumer<BankCard> operation) {
-        BankCard card = bankService.getCard(cardNumber);
+        BankCard card = bankServiceImpl.getCard(cardNumber);
         if (card == null) {
             JOptionPane.showMessageDialog(null, "银行卡不存在！");
         } else {
@@ -382,7 +382,7 @@ public class BankUI {
     }
 
     private void updateBalanceLabel() {
-        BankCard card = bankService.getCard(cardNumber);
+        BankCard card = bankServiceImpl.getCard(cardNumber);
         balanceLabel.setText("所剩余额：" + card.getBalance() + "元");
     }
 }
